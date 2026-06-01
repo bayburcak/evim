@@ -1,0 +1,1252 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>evim</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --cream: #FAF7F2;
+  --warm: #F0EAE0;
+  --sage: #7A9E7E;
+  --sage-dark: #4F7A55;
+  --terracotta: #C4714A;
+  --terra-light: #F5E6DC;
+  --ink: #1C1C1A;
+  --ink-mid: #4A4A45;
+  --ink-light: #8A8A82;
+  --border: #E2DAD0;
+  --white: #FFFFFF;
+  --danger: #C4714A;
+  --danger-light: #F5E6DC;
+  --success: #7A9E7E;
+  --success-light: #EAF2EB;
+  --amber: #C49A4A;
+  --amber-light: #F5F0DC;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* LOGIN */
+#login-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background: var(--cream);
+}
+.login-box {
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+}
+.login-logo {
+  font-family: 'Fraunces', serif;
+  font-size: 48px;
+  font-weight: 300;
+  color: var(--ink);
+  margin-bottom: 4px;
+  letter-spacing: -2px;
+}
+.login-sub {
+  font-size: 13px;
+  color: var(--ink-light);
+  margin-bottom: 2.5rem;
+  font-weight: 300;
+}
+.login-box input {
+  width: 100%;
+  padding: 14px 18px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--white);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 16px;
+  color: var(--ink);
+  text-align: center;
+  letter-spacing: 3px;
+  margin-bottom: 12px;
+  outline: none;
+  transition: border-color .2s;
+}
+.login-box input:focus { border-color: var(--sage); }
+.login-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--ink);
+  color: var(--white);
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background .2s;
+}
+.login-btn:hover { background: var(--ink-mid); }
+.login-error { color: var(--terracotta); font-size: 13px; margin-top: 10px; }
+
+/* APP */
+#app { display: none; min-height: 100vh; }
+.app-header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.app-logo {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -1px;
+  color: var(--ink);
+}
+.header-actions { display: flex; align-items: center; gap: 8px; }
+.icon-btn {
+  width: 36px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  color: var(--ink-mid);
+  transition: background .15s;
+}
+.icon-btn:hover { background: var(--warm); }
+
+/* NAV */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--white);
+  border-top: 1px solid var(--border);
+  display: flex;
+  z-index: 100;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 0 8px;
+  cursor: pointer;
+  gap: 3px;
+  border: none;
+  background: transparent;
+  color: var(--ink-light);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  transition: color .15s;
+}
+.nav-item .nav-icon { font-size: 20px; line-height: 1; }
+.nav-item.active { color: var(--sage-dark); }
+.nav-item.active .nav-icon { transform: translateY(-1px); }
+
+/* PANELS */
+.panel { display: none; padding: 1.25rem 1.25rem 90px; }
+.panel.active { display: block; }
+
+/* CARDS */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.card-title {
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--ink-light);
+  margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 300;
+  margin-bottom: 1rem;
+  letter-spacing: -0.5px;
+}
+
+/* METRIC GRID */
+.metric-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; }
+.metric-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1rem;
+}
+.metric-label { font-size: 11px; color: var(--ink-light); margin-bottom: 6px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; }
+.metric-val { font-family: 'Fraunces', serif; font-size: 24px; font-weight: 300; letter-spacing: -1px; }
+.metric-val.sage { color: var(--sage-dark); }
+.metric-val.terra { color: var(--terracotta); }
+.metric-val.amber { color: var(--amber); }
+
+/* ROWS */
+.row-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.row-item:last-child { border-bottom: none; padding-bottom: 0; }
+.row-item:first-child { padding-top: 0; }
+.row-left { flex: 1; min-width: 0; }
+.row-name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row-sub { font-size: 12px; color: var(--ink-light); margin-top: 2px; }
+
+/* BADGES */
+.badge {
+  display: inline-flex; align-items: center;
+  font-size: 11px; font-weight: 500;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.badge-sage { background: var(--success-light); color: var(--sage-dark); }
+.badge-terra { background: var(--danger-light); color: #8B4A2A; }
+.badge-amber { background: var(--amber-light); color: #7A5A1A; }
+.badge-gray { background: var(--warm); color: var(--ink-mid); }
+.badge-ink { background: var(--ink); color: var(--white); }
+
+/* FORMS */
+.form-field { margin-bottom: 12px; }
+.form-field label { font-size: 12px; color: var(--ink-light); display: block; margin-bottom: 5px; font-weight: 500; }
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--cream);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--ink);
+  outline: none;
+  transition: border-color .2s;
+}
+.form-field input:focus,
+.form-field select:focus { border-color: var(--sage); background: var(--white); }
+.form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* BUTTONS */
+.btn {
+  padding: 9px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: transparent;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--ink);
+  transition: all .15s;
+}
+.btn:hover { background: var(--warm); }
+.btn-primary {
+  background: var(--ink);
+  color: var(--white);
+  border-color: var(--ink);
+}
+.btn-primary:hover { background: var(--ink-mid); }
+.btn-sage {
+  background: var(--sage);
+  color: var(--white);
+  border-color: var(--sage);
+}
+.btn-sage:hover { background: var(--sage-dark); border-color: var(--sage-dark); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-danger { color: var(--terracotta); border-color: #E8C4B0; }
+.btn-danger:hover { background: var(--danger-light); }
+.btn-full { width: 100%; text-align: center; }
+.btn-big {
+  width: 100%;
+  padding: 14px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+/* PROGRESS */
+.progress-wrap { height: 6px; background: var(--warm); border-radius: 3px; overflow: hidden; margin-top: 6px; }
+.progress-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
+
+/* CHECKBOX */
+.check-box {
+  width: 22px; height: 22px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px;
+  flex-shrink: 0;
+  transition: all .15s;
+  color: transparent;
+}
+.check-box.done { background: var(--sage); border-color: var(--sage); color: white; }
+
+/* EMPTY */
+.empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--ink-light);
+}
+.empty-icon { font-size: 32px; margin-bottom: 8px; }
+.empty-text { font-size: 13px; }
+
+/* MENU GRID */
+.menu-week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.menu-day {
+  background: var(--cream);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 4px;
+  text-align: center;
+  min-height: 80px;
+}
+.menu-day-name { font-size: 10px; font-weight: 500; color: var(--ink-light); margin-bottom: 4px; text-transform: uppercase; }
+.menu-day-meal { font-size: 10px; color: var(--ink); line-height: 1.3; }
+.menu-day.today { border-color: var(--sage); background: var(--success-light); }
+
+/* AI LOADING */
+.ai-loading {
+  display: flex; align-items: center; gap: 10px;
+  padding: 1rem; color: var(--ink-mid); font-size: 13px;
+}
+.dot-pulse { display: flex; gap: 4px; }
+.dot-pulse span {
+  width: 6px; height: 6px;
+  background: var(--sage);
+  border-radius: 50%;
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.dot-pulse span:nth-child(2) { animation-delay: .2s; }
+.dot-pulse span:nth-child(3) { animation-delay: .4s; }
+@keyframes pulse { 0%,80%,100% { opacity: .3; transform: scale(.8); } 40% { opacity: 1; transform: scale(1); } }
+
+/* PROFIL */
+.profil-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.profil-avatar {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-size: 18px;
+  font-weight: 300;
+  margin-bottom: 10px;
+}
+.kal-bar { margin-top: 8px; }
+.kal-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-light); margin-bottom: 4px; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(28,28,26,.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: var(--white);
+  border-radius: 20px 20px 0 0;
+  padding: 1.5rem 1.5rem 2rem;
+  width: 100%;
+  max-width: 600px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 1.25rem;
+}
+.modal-title {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 300;
+  margin-bottom: 1.25rem;
+}
+
+/* TOAST */
+.toast {
+  position: fixed; bottom: 90px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink);
+  color: var(--white);
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transition: all .3s;
+  z-index: 300;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ALIŞVERIŞ TOPLAM */
+.alis-summary {
+  background: var(--ink);
+  color: var(--white);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.alis-summary-label { font-size: 12px; opacity: .7; margin-bottom: 2px; }
+.alis-summary-val { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 300; letter-spacing: -1px; }
+
+@media(min-width:600px) {
+  .panel { max-width: 600px; margin: 0 auto; }
+  .bottom-nav { max-width: 600px; left: 50%; transform: translateX(-50%); border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">evim</div>
+    <div class="login-sub">ortak ev yönetimi</div>
+    <input type="password" id="sifre-input" placeholder="şifre" onkeydown="if(event.key==='Enter')girisYap()">
+    <button class="login-btn" onclick="girisYap()">giriş yap</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <header class="app-header">
+    <div class="app-logo">evim</div>
+    <div class="header-actions">
+      <button class="icon-btn" onclick="openModal('profil-modal')" title="Profiller">👤</button>
+      <button class="icon-btn" onclick="cikisYap()" title="Çıkış">🚪</button>
+    </div>
+  </header>
+
+  <!-- ÖZET -->
+  <div id="panel-ozet" class="panel active">
+    <div class="section-title">merhaba 🌿</div>
+    <div class="metric-grid" id="ozet-metrics"></div>
+    <div class="card" id="ozet-uyarilar-card">
+      <div class="card-title">dikkat gerektiren</div>
+      <div id="ozet-uyarilar"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">bugünkü görevler</div>
+      <div id="ozet-gorevler"></div>
+    </div>
+  </div>
+
+  <!-- BÜTÇE -->
+  <div id="panel-butce" class="panel">
+    <div class="section-title">bütçe</div>
+    <div class="metric-grid" id="butce-metrics"></div>
+    <div class="card">
+      <div class="card-title">kategoriler</div>
+      <div id="butce-kategoriler"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">harcamalar</div>
+      <div id="harcama-listesi"></div>
+    </div>
+    <button class="btn btn-primary btn-big" onclick="openModal('harcama-modal')">+ harcama ekle</button>
+  </div>
+
+  <!-- MUTFAK -->
+  <div id="panel-mutfak" class="panel">
+    <div class="section-title">mutfak</div>
+
+    <div class="card">
+      <div class="card-title">haftalık menü</div>
+      <div id="menu-haftalik"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-sage btn-big" onclick="menuUret()" id="menu-btn">✨ menü oluştur</button>
+        <button class="btn btn-sm" onclick="openModal('menu-tercih-modal')">tercihler</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">dolap & stok</div>
+      <div id="stok-listesi"></div>
+      <button class="btn btn-sm" style="margin-top:10px" onclick="openModal('stok-modal')">+ ürün ekle</button>
+    </div>
+  </div>
+
+  <!-- EV İŞLERİ -->
+  <div id="panel-isler" class="panel">
+    <div class="section-title">ev işleri</div>
+    <div class="card">
+      <div id="gorev-listesi"></div>
+      <button class="btn btn-sm" style="margin-top:10px" onclick="openModal('gorev-modal')">+ görev ekle</button>
+    </div>
+  </div>
+
+  <!-- ALIŞVERİŞ -->
+  <div id="panel-alisveris" class="panel">
+    <div class="section-title">alışveriş</div>
+    <div id="alis-summary-wrap"></div>
+    <div class="card">
+      <div id="alis-listesi"></div>
+      <button class="btn btn-sm" style="margin-top:10px" onclick="openModal('alis-modal')">+ ekle</button>
+    </div>
+    <button class="btn btn-primary btn-big" onclick="alisListeSifirla()" style="margin-top:0">✓ alışveriş tamamlandı</button>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchPanel('ozet',this)">
+      <span class="nav-icon">🏠</span><span>özet</span>
+    </button>
+    <button class="nav-item" onclick="switchPanel('butce',this)">
+      <span class="nav-icon">💰</span><span>bütçe</span>
+    </button>
+    <button class="nav-item" onclick="switchPanel('mutfak',this)">
+      <span class="nav-icon">🍽️</span><span>mutfak</span>
+    </button>
+    <button class="nav-item" onclick="switchPanel('isler',this)">
+      <span class="nav-icon">✅</span><span>işler</span>
+    </button>
+    <button class="nav-item" onclick="switchPanel('alisveris',this)">
+      <span class="nav-icon">🛒</span><span>alışveriş</span>
+    </button>
+  </nav>
+</div>
+
+<!-- MODALS -->
+
+<!-- Harcama Modal -->
+<div class="modal-overlay" id="harcama-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">harcama ekle</div>
+    <div class="form-field"><label>Kategori</label>
+      <select id="h-kat"><option>Market</option><option>Fatura</option><option>Kira</option><option>Ulaşım</option><option>Sağlık</option><option>Eğlence</option><option>Giyim</option><option>Diğer</option></select>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-field"><label>Tutar (₺)</label><input type="number" id="h-tutar" placeholder="0"></div>
+      <div class="form-field"><label>Tarih</label><input type="date" id="h-tarih"></div>
+    </div>
+    <div class="form-field"><label>Açıklama</label><input type="text" id="h-aciklama" placeholder="Ne için?"></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="harcamaEkle()">kaydet</button>
+      <button class="btn btn-full" onclick="closeModal('harcama-modal')">iptal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Stok Modal -->
+<div class="modal-overlay" id="stok-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">stok ekle</div>
+    <div class="form-grid-2">
+      <div class="form-field"><label>Ürün adı</label><input type="text" id="s-ad" placeholder="Zeytinyağı..."></div>
+      <div class="form-field"><label>Miktar</label><input type="text" id="s-miktar" placeholder="1 şişe..."></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-field"><label>SKT</label><input type="date" id="s-skt"></div>
+      <div class="form-field"><label>Kategori</label>
+        <select id="s-kat"><option>Tahıl</option><option>Protein</option><option>Süt ürünleri</option><option>Sebze-Meyve</option><option>Baharat</option><option>Konserve</option><option>Diğer</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="stokEkle()">kaydet</button>
+      <button class="btn btn-full" onclick="closeModal('stok-modal')">iptal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Görev Modal -->
+<div class="modal-overlay" id="gorev-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">görev ekle</div>
+    <div class="form-field"><label>Görev adı</label><input type="text" id="g-ad" placeholder="Banyo temizliği..."></div>
+    <div class="form-grid-2">
+      <div class="form-field"><label>Sıklık</label>
+        <select id="g-siklık"><option>Günlük</option><option>Haftalık</option><option>Aylık</option><option>3 ayda bir</option><option>Tek seferlik</option></select>
+      </div>
+      <div class="form-field"><label>Son tarih</label><input type="date" id="g-tarih"></div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="gorevEkle()">kaydet</button>
+      <button class="btn btn-full" onclick="closeModal('gorev-modal')">iptal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Alışveriş Modal -->
+<div class="modal-overlay" id="alis-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">listeye ekle</div>
+    <div class="form-grid-2">
+      <div class="form-field"><label>Ürün</label><input type="text" id="a-ad" placeholder="Yumurta..."></div>
+      <div class="form-field"><label>Miktar</label><input type="text" id="a-miktar" placeholder="12 adet..."></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-field"><label>Tahmini fiyat (₺)</label><input type="number" id="a-fiyat" placeholder="0"></div>
+      <div class="form-field"><label>Kategori</label>
+        <select id="a-kat"><option>Market</option><option>Temizlik</option><option>Kişisel bakım</option><option>Ev gereçleri</option><option>Diğer</option></select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="alisEkle()">kaydet</button>
+      <button class="btn btn-full" onclick="closeModal('alis-modal')">iptal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profil Modal -->
+<div class="modal-overlay" id="profil-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">profiller</div>
+    <div id="profil-listesi"></div>
+    <button class="btn btn-primary btn-big" style="margin-top:12px" onclick="openModal('profil-ekle-modal');closeModal('profil-modal')">+ profil ekle</button>
+    <div style="margin-top:12px">
+      <div class="form-field">
+        <label>Aylık bütçe hedefi (₺)</label>
+        <input type="number" id="butce-hedef-input" placeholder="15000">
+      </div>
+      <button class="btn btn-sm btn-sage" onclick="butceGuncelle()">güncelle</button>
+    </div>
+  </div>
+</div>
+
+<!-- Profil Ekle Modal -->
+<div class="modal-overlay" id="profil-ekle-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">profil ekle</div>
+    <div class="form-grid-2">
+      <div class="form-field"><label>İsim</label><input type="text" id="p-isim" placeholder="Burçak..."></div>
+      <div class="form-field"><label>Yaş</label><input type="number" id="p-yas" placeholder="30"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-field"><label>Boy (cm)</label><input type="number" id="p-boy" placeholder="165"></div>
+      <div class="form-field"><label>Kilo (kg)</label><input type="number" id="p-kilo" placeholder="70"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="form-field"><label>Hedef kilo (kg)</label><input type="number" id="p-hedefkilo" placeholder="60"></div>
+      <div class="form-field"><label>Aktivite</label>
+        <select id="p-aktivite">
+          <option value="1.2">Hareketsiz</option>
+          <option value="1.375">Hafif aktif</option>
+          <option value="1.55">Orta aktif</option>
+          <option value="1.725">Çok aktif</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-field"><label>Cinsiyet</label>
+      <select id="p-cinsiyet"><option value="K">Kadın</option><option value="E">Erkek</option></select>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="profilEkle()">kaydet</button>
+      <button class="btn btn-full" onclick="closeModal('profil-ekle-modal')">iptal</button>
+    </div>
+  </div>
+</div>
+
+<!-- Menü Tercihleri Modal -->
+<div class="modal-overlay" id="menu-tercih-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">menü tercihleri</div>
+    <div class="form-field">
+      <label>Sevmediğiniz / yemeyin yiyecekler</label>
+      <input type="text" id="mt-sevmez" placeholder="ıspanak, karabiber...">
+    </div>
+    <div class="form-field">
+      <label>Özel notlar (alerji, tercih)</label>
+      <input type="text" id="mt-not" placeholder="gluten yok, et az olsun...">
+    </div>
+    <div class="form-field">
+      <label>Haftalık market bütçesi (₺)</label>
+      <input type="number" id="mt-butce" placeholder="1500">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-primary btn-full" onclick="menuTercihKaydet()">kaydet</button>
+      <button class="btn btn-full" onclick="closeModal('menu-tercih-modal')">iptal</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SUPABASE_URL = 'https://qdbxgieqkjevlvwuosor.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkYnhnaWVxa2pldmx2d3Vvc29yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNzQ2MTUsImV4cCI6MjA5NTg1MDYxNX0.rkjqMEG6rUwLcIGlbqwBZNKZOksZ5qwZ7y5TtmgkWsU';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let cache = { harcamalar:[], stok:[], gorevler:[], alisveris:[], ayarlar:{}, profiller:[], menu:null };
+let menuTercihler = JSON.parse(localStorage.getItem('menu_tercihler') || '{}');
+
+// ─── AUTH ───
+async function girisYap() {
+  const sifre = document.getElementById('sifre-input').value.trim();
+  if (!sifre) return;
+  const { data } = await sb.from('ayarlar').select('deger').eq('anahtar','ev_sifresi').single();
+  if (data && data.deger === sifre) {
+    localStorage.setItem('evim_giris', '1');
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    await loadAll();
+    renderAll();
+  } else {
+    document.getElementById('login-error').textContent = 'Şifre yanlış';
+  }
+}
+
+function cikisYap() {
+  localStorage.removeItem('evim_giris');
+  location.reload();
+}
+
+// ─── LOAD ───
+async function loadAll() {
+  const [h, s, g, a, ay, p, m] = await Promise.all([
+    sb.from('harcamalar').select('*').order('created_at', {ascending:false}),
+    sb.from('stok').select('*').order('created_at', {ascending:false}),
+    sb.from('gorevler').select('*').order('created_at', {ascending:false}),
+    sb.from('alisveris').select('*').order('created_at', {ascending:false}),
+    sb.from('ayarlar').select('*'),
+    sb.from('profiller').select('*').order('created_at'),
+    sb.from('menu').select('*').order('created_at', {ascending:false}).limit(1)
+  ]);
+  cache.harcamalar = h.data || [];
+  cache.stok = s.data || [];
+  cache.gorevler = g.data || [];
+  cache.alisveris = a.data || [];
+  cache.profiller = p.data || [];
+  cache.menu = m.data?.[0] || null;
+  if (ay.data) ay.data.forEach(r => cache.ayarlar[r.anahtar] = r.deger);
+  const bi = document.getElementById('butce-hedef-input');
+  if (bi) bi.value = cache.ayarlar.aylik_butce || '15000';
+}
+
+function renderAll() {
+  renderOzet(); renderButce(); renderMutfak(); renderIsler(); renderAlisveris(); renderProfiller();
+}
+
+// ─── PANEL ───
+function switchPanel(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + id).classList.add('active');
+  el.classList.add('active');
+}
+
+// ─── ÖZET ───
+function renderOzet() {
+  const total = cache.harcamalar.reduce((s,h)=>s+h.tutar,0);
+  const butce = +(cache.ayarlar.aylik_butce||15000);
+  const kalan = butce - total;
+  const bekleyen = cache.gorevler.filter(g=>!g.tamamlandi).length;
+  const stokUyari = cache.stok.filter(s=>{
+    if(!s.skt) return false;
+    const fark = (new Date(s.skt)-new Date())/(86400000);
+    return fark < 7;
+  }).length;
+
+  document.getElementById('ozet-metrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">kalan bütçe</div>
+      <div class="metric-val ${kalan>=0?'sage':'terra'}">₺${Math.abs(kalan).toLocaleString('tr')}</div>
+      <div class="progress-wrap"><div class="progress-fill" style="width:${Math.min(100,Math.round(total/butce*100))}%;background:${kalan<0?'#C4714A':kalan<butce*.2?'#C49A4A':'#7A9E7E'}"></div></div>
+    </div>
+    <div class="metric-card"><div class="metric-label">bekleyen görev</div><div class="metric-val amber">${bekleyen}</div></div>
+    <div class="metric-card"><div class="metric-label">stok uyarısı</div><div class="metric-val ${stokUyari>0?'terra':'sage'}">${stokUyari}</div></div>
+    <div class="metric-card"><div class="metric-label">alışveriş</div><div class="metric-val">${cache.alisveris.filter(a=>!a.alindi).length} ürün</div></div>
+  `;
+
+  let uyarilar = '';
+  if (kalan < 0) uyarilar += `<div class="row-item"><div class="row-left"><div class="row-name">Bütçe aşıldı</div></div><span class="badge badge-terra">₺${Math.abs(kalan).toLocaleString('tr')}</span></div>`;
+  cache.stok.filter(s=>{ if(!s.skt) return false; return (new Date(s.skt)-new Date())/86400000 < 7; }).forEach(s=>{
+    uyarilar += `<div class="row-item"><div class="row-left"><div class="row-name">${s.ad}</div><div class="row-sub">son kullanma tarihi yaklaşıyor</div></div><span class="badge badge-amber">⚠️</span></div>`;
+  });
+  document.getElementById('ozet-uyarilar').innerHTML = uyarilar || '<div class="empty-state"><div class="empty-text">her şey yolunda ✓</div></div>';
+
+  const bugun = new Date().toISOString().slice(0,10);
+  const bugunGorev = cache.gorevler.filter(g=>g.tarih===bugun && !g.tamamlandi);
+  document.getElementById('ozet-gorevler').innerHTML = bugunGorev.length ?
+    bugunGorev.map(g=>`<div class="row-item">
+      <div class="check-box" onclick="toggleGorev(${g.id})"></div>
+      <div class="row-name">${g.ad}</div>
+      <span class="badge badge-gray">${g.siklık}</span>
+    </div>`).join('') : '<div class="empty-state"><div class="empty-text">bugün için görev yok</div></div>';
+}
+
+// ─── BÜTÇE ───
+function renderButce() {
+  const total = cache.harcamalar.reduce((s,h)=>s+h.tutar,0);
+  const butce = +(cache.ayarlar.aylik_butce||15000);
+  const kalan = butce - total;
+  const yuzde = Math.min(100, Math.round(total/butce*100));
+
+  document.getElementById('butce-metrics').innerHTML = `
+    <div class="metric-card"><div class="metric-label">aylık hedef</div><div class="metric-val">₺${butce.toLocaleString('tr')}</div></div>
+    <div class="metric-card"><div class="metric-label">harcanan</div><div class="metric-val terra">₺${total.toLocaleString('tr')}</div></div>
+    <div class="metric-card"><div class="metric-label">kalan</div><div class="metric-val ${kalan>=0?'sage':'terra'}">₺${kalan.toLocaleString('tr')}</div></div>
+    <div class="metric-card"><div class="metric-label">kullanım</div><div class="metric-val">${yuzde}%</div></div>
+  `;
+
+  const katMap = {};
+  cache.harcamalar.forEach(h=>{ katMap[h.kategori]=(katMap[h.kategori]||0)+h.tutar; });
+  document.getElementById('butce-kategoriler').innerHTML = Object.entries(katMap).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`
+    <div class="row-item">
+      <div class="row-left">
+        <div class="row-name">${k}</div>
+        <div class="progress-wrap"><div class="progress-fill" style="width:${Math.round(v/total*100)}%;background:var(--sage)"></div></div>
+      </div>
+      <span style="font-size:14px;font-weight:500;margin-left:8px">₺${v.toLocaleString('tr')}</span>
+    </div>`).join('') || '<div class="empty-state"><div class="empty-text">henüz harcama yok</div></div>';
+
+  document.getElementById('harcama-listesi').innerHTML = cache.harcamalar.slice(0,20).map(h=>`
+    <div class="row-item">
+      <div class="row-left">
+        <div class="row-name">${h.aciklama}</div>
+        <div class="row-sub">${h.kategori} · ${h.tarih}</div>
+      </div>
+      <span style="font-size:14px;font-weight:500;color:var(--terracotta)">₺${h.tutar.toLocaleString('tr')}</span>
+      <button class="btn btn-sm btn-danger" onclick="harcamaSil(${h.id})">✕</button>
+    </div>`).join('') || '<div class="empty-state"><div class="empty-text">henüz harcama yok</div></div>';
+}
+
+async function harcamaEkle() {
+  const tutar = +document.getElementById('h-tutar').value;
+  const aciklama = document.getElementById('h-aciklama').value.trim();
+  if (!tutar || !aciklama) return;
+  const { data } = await sb.from('harcamalar').insert({
+    kategori: document.getElementById('h-kat').value,
+    tutar, aciklama,
+    tarih: document.getElementById('h-tarih').value || new Date().toISOString().slice(0,10)
+  }).select().single();
+  if (data) {
+    cache.harcamalar.unshift(data);
+    closeModal('harcama-modal');
+    document.getElementById('h-tutar').value=''; document.getElementById('h-aciklama').value='';
+    renderButce(); renderOzet();
+    toast('Harcama eklendi');
+  }
+}
+
+async function harcamaSil(id) {
+  await sb.from('harcamalar').delete().eq('id',id);
+  cache.harcamalar = cache.harcamalar.filter(h=>h.id!==id);
+  renderButce(); renderOzet();
+}
+
+// ─── MUTFAK ───
+function renderMutfak() {
+  // Stok
+  document.getElementById('stok-listesi').innerHTML = cache.stok.length ? cache.stok.map(s=>{
+    let badge='badge-sage', txt='iyi';
+    if(s.skt){
+      const fark=(new Date(s.skt)-new Date())/86400000;
+      if(fark<0){badge='badge-terra';txt='geçmiş';}
+      else if(fark<7){badge='badge-amber';txt=Math.round(fark)+' gün';}
+    }
+    return `<div class="row-item">
+      <div class="row-left"><div class="row-name">${s.ad}</div><div class="row-sub">${s.miktar} · ${s.kategori}</div></div>
+      ${s.skt?`<span class="badge ${badge}">${txt}</span>`:''}
+      <button class="btn btn-sm btn-danger" onclick="stokSil(${s.id})">✕</button>
+    </div>`;}).join('') : '<div class="empty-state"><div class="empty-text">dolap boş — ürün ekleyin</div></div>';
+
+  // Menü
+  if (cache.menu && cache.menu.menu_json) {
+    renderMenuGrid(cache.menu.menu_json);
+  } else {
+    document.getElementById('menu-haftalik').innerHTML = '<div class="empty-state"><div class="empty-text">henüz menü oluşturulmadı</div></div>';
+  }
+}
+
+function renderMenuGrid(menuData) {
+  const gunler = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  const bugunIdx = (new Date().getDay()+6)%7;
+  const html = `<div class="menu-week">`+gunler.map((g,i)=>{
+    const gun = menuData[i] || {};
+    return `<div class="menu-day ${i===bugunIdx?'today':''}">
+      <div class="menu-day-name">${g}</div>
+      <div class="menu-day-meal">${gun.aksam||'—'}</div>
+    </div>`;
+  }).join('')+`</div>`;
+  document.getElementById('menu-haftalik').innerHTML = html;
+}
+
+async function menuUret() {
+  const btn = document.getElementById('menu-btn');
+  btn.disabled = true;
+  document.getElementById('menu-haftalik').innerHTML = `<div class="ai-loading"><div class="dot-pulse"><span></span><span></span><span></span></div> menü hazırlanıyor...</div>`;
+
+  const profil1 = cache.profiller[0];
+  const profil2 = cache.profiller[1];
+
+  const stokList = cache.stok.map(s=>s.ad).join(', ') || 'bilinmiyor';
+  const sevmez = menuTercihler.sevmez || '';
+  const notlar = menuTercihler.not || '';
+  const mbutce = menuTercihler.butce || '1500';
+
+  let profilBilgi = '2 yetişkin, kilo verme hedefi var.';
+  if (profil1) {
+    const kal1 = hesaplaKalori(profil1);
+    profilBilgi = `Kişi 1: ${profil1.isim}, ${profil1.yas} yaş, ${profil1.kilo}kg, hedef ${profil1.hedef_kilo}kg, günlük ${kal1} kcal hedef.`;
+  }
+  if (profil2) {
+    const kal2 = hesaplaKalori(profil2);
+    profilBilgi += ` Kişi 2: ${profil2.isim}, ${profil2.yas} yaş, ${profil2.kilo}kg, hedef ${profil2.hedef_kilo}kg, günlük ${kal2} kcal hedef.`;
+  }
+
+  const prompt = `Sen bir diyetisyen asistanısın. Aşağıdaki bilgilere göre haftalık 7 günlük akşam yemeği menüsü oluştur.
+
+Profil: ${profilBilgi}
+Evdeki stok: ${stokList}
+Sevmedikleri: ${sevmez || 'yok'}
+Özel notlar: ${notlar || 'yok'}
+Haftalık bütçe: ₺${mbutce}
+
+SADECE JSON formatında yanıt ver, başka hiçbir metin ekleme. Format:
+[
+  {"gun": 0, "aksam": "Yemek adı", "kalori": 450, "sure": "30 dk", "malzemeler": ["malzeme1", "malzeme2"]},
+  ...7 gün için
+]
+Türkçe, sağlıklı, kilo dostu, ekonomik yemekler öner. Çeşitlilik olsun.`;
+
+  try {
+    const res = await fetch('https://qdbxgieqkjevlvwuosor.supabase.co/functions/v1/menu-olustur', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.[0]?.text || '';
+    const clean = text.replace(/```json|```/g,'').trim();
+    const menuData = JSON.parse(clean);
+
+    const { data: saved } = await sb.from('menu').insert({
+      hafta_baslangic: new Date().toISOString().slice(0,10),
+      menu_json: menuData
+    }).select().single();
+    cache.menu = saved;
+
+    renderMenuGrid(menuData);
+    await alisverisListesiOlustur(menuData);
+    toast('Menü oluşturuldu! Alışveriş listesi güncellendi 🎉');
+  } catch(e) {
+    document.getElementById('menu-haftalik').innerHTML = '<div class="empty-state"><div class="empty-text">Bir hata oluştu, tekrar dene</div></div>';
+  }
+  btn.disabled = false;
+}
+
+async function alisverisListesiOlustur(menuData) {
+  const stokAdlar = cache.stok.map(s=>s.ad.toLowerCase());
+  const tumMalzemeler = [];
+  menuData.forEach(g=>{ if(g.malzemeler) g.malzemeler.forEach(m=>tumMalzemeler.push(m)); });
+  const tekMalzeme = [...new Set(tumMalzemeler)].filter(m=>!stokAdlar.some(s=>s.includes(m.toLowerCase())));
+
+  for (const m of tekMalzeme.slice(0,15)) {
+    const mevcut = cache.alisveris.find(a=>a.ad.toLowerCase()===m.toLowerCase() && !a.alindi);
+    if (!mevcut) {
+      const { data } = await sb.from('alisveris').insert({ad:m, miktar:'1 adet', fiyat:0, kategori:'Market', alindi:false}).select().single();
+      if (data) cache.alisveris.push(data);
+    }
+  }
+  renderAlisveris();
+}
+
+function menuTercihKaydet() {
+  menuTercihler = {
+    sevmez: document.getElementById('mt-sevmez').value,
+    not: document.getElementById('mt-not').value,
+    butce: document.getElementById('mt-butce').value
+  };
+  localStorage.setItem('menu_tercihler', JSON.stringify(menuTercihler));
+  closeModal('menu-tercih-modal');
+  toast('Tercihler kaydedildi');
+}
+
+async function stokEkle() {
+  const ad = document.getElementById('s-ad').value.trim();
+  if (!ad) return;
+  const { data } = await sb.from('stok').insert({
+    ad, miktar: document.getElementById('s-miktar').value,
+    skt: document.getElementById('s-skt').value || null,
+    kategori: document.getElementById('s-kat').value
+  }).select().single();
+  if (data) {
+    cache.stok.unshift(data);
+    closeModal('stok-modal');
+    document.getElementById('s-ad').value=''; document.getElementById('s-miktar').value=''; document.getElementById('s-skt').value='';
+    renderMutfak(); renderOzet();
+    toast('Stoka eklendi');
+  }
+}
+
+async function stokSil(id) {
+  await sb.from('stok').delete().eq('id',id);
+  cache.stok = cache.stok.filter(s=>s.id!==id);
+  renderMutfak();
+}
+
+// ─── EV İŞLERİ ───
+function renderIsler() {
+  const bekleyen = cache.gorevler.filter(g=>!g.tamamlandi);
+  const tamamlanan = cache.gorevler.filter(g=>g.tamamlandi);
+  document.getElementById('gorev-listesi').innerHTML =
+    (bekleyen.length ? bekleyen.map(g=>`
+      <div class="row-item">
+        <div class="check-box" onclick="toggleGorev(${g.id})"></div>
+        <div class="row-left"><div class="row-name">${g.ad}</div><div class="row-sub">${g.siklık}${g.tarih?' · '+g.tarih:''}</div></div>
+        <button class="btn btn-sm btn-danger" onclick="gorevSil(${g.id})">✕</button>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-text">bekleyen görev yok 🎉</div></div>') +
+    (tamamlanan.length ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><div class="card-title" style="margin-bottom:8px">tamamlananlar</div>` +
+      tamamlanan.map(g=>`
+        <div class="row-item">
+          <div class="check-box done" onclick="toggleGorev(${g.id})">✓</div>
+          <div class="row-name" style="text-decoration:line-through;color:var(--ink-light)">${g.ad}</div>
+          <button class="btn btn-sm btn-danger" onclick="gorevSil(${g.id})">✕</button>
+        </div>`).join('')+'</div>' : '');
+}
+
+async function gorevEkle() {
+  const ad = document.getElementById('g-ad').value.trim();
+  if (!ad) return;
+  const { data } = await sb.from('gorevler').insert({
+    ad, siklık: document.getElementById('g-siklık').value,
+    tarih: document.getElementById('g-tarih').value || null,
+    tamamlandi: false
+  }).select().single();
+  if (data) {
+    cache.gorevler.unshift(data);
+    closeModal('gorev-modal');
+    document.getElementById('g-ad').value=''; document.getElementById('g-tarih').value='';
+    renderIsler(); renderOzet();
+    toast('Görev eklendi');
+  }
+}
+
+async function toggleGorev(id) {
+  const g = cache.gorevler.find(g=>g.id===id);
+  if (!g) return;
+  g.tamamlandi = !g.tamamlandi;
+  await sb.from('gorevler').update({tamamlandi:g.tamamlandi}).eq('id',id);
+  renderIsler(); renderOzet();
+}
+
+async function gorevSil(id) {
+  await sb.from('gorevler').delete().eq('id',id);
+  cache.gorevler = cache.gorevler.filter(g=>g.id!==id);
+  renderIsler();
+}
+
+// ─── ALIŞVERİŞ ───
+function renderAlisveris() {
+  const alinacak = cache.alisveris.filter(a=>!a.alindi);
+  const alınan = cache.alisveris.filter(a=>a.alindi);
+  const toplam = alinacak.reduce((s,a)=>s+(a.fiyat||0),0);
+
+  document.getElementById('alis-summary-wrap').innerHTML = `
+    <div class="alis-summary">
+      <div><div class="alis-summary-label">alınacak ${alinacak.length} ürün</div><div class="alis-summary-val">₺${toplam.toLocaleString('tr')}</div></div>
+      <span style="font-size:24px">🛒</span>
+    </div>`;
+
+  document.getElementById('alis-listesi').innerHTML =
+    (alinacak.length ? alinacak.map(a=>`
+      <div class="row-item">
+        <div class="check-box" onclick="toggleAlis(${a.id})"></div>
+        <div class="row-left"><div class="row-name">${a.ad}</div><div class="row-sub">${a.miktar} · ${a.kategori}</div></div>
+        ${a.fiyat?`<span style="font-size:13px;font-weight:500;color:var(--terracotta)">₺${a.fiyat}</span>`:''}
+        <button class="btn btn-sm btn-danger" onclick="alisSil(${a.id})">✕</button>
+      </div>`).join('') : '<div class="empty-state"><div class="empty-text">liste boş</div></div>') +
+    (alınan.length ? `<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)"><div class="card-title" style="margin-bottom:8px">sepete atılanlar</div>` +
+      alınan.map(a=>`
+        <div class="row-item">
+          <div class="check-box done" onclick="toggleAlis(${a.id})">✓</div>
+          <div class="row-name" style="text-decoration:line-through;color:var(--ink-light)">${a.ad}</div>
+          <button class="btn btn-sm btn-danger" onclick="alisSil(${a.id})">✕</button>
+        </div>`).join('')+'</div>' : '');
+}
+
+async function alisEkle() {
+  const ad = document.getElementById('a-ad').value.trim();
+  if (!ad) return;
+  const { data } = await sb.from('alisveris').insert({
+    ad, miktar: document.getElementById('a-miktar').value,
+    fiyat: +document.getElementById('a-fiyat').value||0,
+    kategori: document.getElementById('a-kat').value,
+    alindi: false
+  }).select().single();
+  if (data) {
+    cache.alisveris.push(data);
+    closeModal('alis-modal');
+    document.getElementById('a-ad').value=''; document.getElementById('a-miktar').value=''; document.getElementById('a-fiyat').value='';
+    renderAlisveris();
+    toast('Listeye eklendi');
+  }
+}
+
+async function toggleAlis(id) {
+  const a = cache.alisveris.find(a=>a.id===id);
+  if (!a) return;
+  a.alindi = !a.alindi;
+  await sb.from('alisveris').update({alindi:a.alindi}).eq('id',id);
+  renderAlisveris();
+}
+
+async function alisSil(id) {
+  await sb.from('alisveris').delete().eq('id',id);
+  cache.alisveris = cache.alisveris.filter(a=>a.id!==id);
+  renderAlisveris();
+}
+
+async function alisListeSifirla() {
+  const alinanlar = cache.alisveris.filter(a=>a.alindi);
+  for (const a of alinanlar) {
+    await sb.from('alisveris').delete().eq('id',a.id);
+  }
+  cache.alisveris = cache.alisveris.filter(a=>!a.alindi);
+  renderAlisveris();
+  toast('Alışveriş tamamlandı 🎉');
+}
+
+// ─── PROFİL ───
+function hesaplaKalori(p) {
+  if (!p.yas || !p.boy || !p.kilo) return null;
+  let bmr;
+  if (p.cinsiyet==='E') bmr = 88.36 + (13.4*p.kilo) + (4.8*p.boy) - (5.7*p.yas);
+  else bmr = 447.6 + (9.2*p.kilo) + (3.1*p.boy) - (4.3*p.yas);
+  const tdee = Math.round(bmr * (p.aktivite||1.375));
+  return Math.round(tdee * 0.85);
+}
+
+function renderProfiller() {
+  document.getElementById('profil-listesi').innerHTML = cache.profiller.length ?
+    cache.profiller.map(p=>{
+      const kal = hesaplaKalori(p);
+      const bmi = p.boy && p.kilo ? (p.kilo/((p.boy/100)**2)).toFixed(1) : null;
+      return `<div class="profil-card">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div class="profil-avatar" style="background:var(--success-light);color:var(--sage-dark)">${p.isim?.[0]||'?'}</div>
+          <div><div style="font-weight:500;font-size:15px">${p.isim}</div>
+          <div style="font-size:12px;color:var(--ink-light)">${p.yas} yaş · ${p.kilo} kg → ${p.hedef_kilo} kg hedef</div></div>
+          <button class="btn btn-sm btn-danger" style="margin-left:auto" onclick="profilSil(${p.id})">✕</button>
+        </div>
+        ${kal?`<div class="kal-bar"><div class="kal-label"><span>günlük kalori hedefi</span><span>${kal} kcal</span></div></div>`:''}
+        ${bmi?`<div style="font-size:12px;color:var(--ink-light);margin-top:4px">BMI: ${bmi}</div>`:''}
+      </div>`;
+    }).join('') : '<div class="empty-state"><div class="empty-text">henüz profil eklenmedi</div></div>';
+}
+
+async function profilEkle() {
+  const isim = document.getElementById('p-isim').value.trim();
+  if (!isim) return;
+  const { data } = await sb.from('profiller').insert({
+    isim,
+    yas: +document.getElementById('p-yas').value||null,
+    boy: +document.getElementById('p-boy').value||null,
+    kilo: +document.getElementById('p-kilo').value||null,
+    hedef_kilo: +document.getElementById('p-hedefkilo').value||null,
+    aktivite: +document.getElementById('p-aktivite').value||1.375,
+    cinsiyet: document.getElementById('p-cinsiyet').value
+  }).select().single();
+  if (data) {
+    cache.profiller.push(data);
+    closeModal('profil-ekle-modal');
+    renderProfiller();
+    toast('Profil eklendi');
+  }
+}
+
+async function profilSil(id) {
+  await sb.from('profiller').delete().eq('id',id);
+  cache.profiller = cache.profiller.filter(p=>p.id!==id);
+  renderProfiller();
+}
+
+async function butceGuncelle() {
+  const yeni = document.getElementById('butce-hedef-input').value;
+  await sb.from('ayarlar').update({deger:yeni}).eq('anahtar','aylik_butce');
+  cache.ayarlar.aylik_butce = yeni;
+  renderButce(); renderOzet();
+  toast('Bütçe güncellendi');
+}
+
+// ─── MODAL ───
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// ─── TOAST ───
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2500);
+}
+
+// ─── INIT ───
+const tarihInputlar = document.querySelectorAll('input[type=date]');
+tarihInputlar.forEach(i=>{ if(!i.value) i.value=new Date().toISOString().slice(0,10); });
+
+if (localStorage.getItem('evim_giris')) {
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  loadAll().then(()=>renderAll());
+}
+
+if (menuTercihler.sevmez) document.getElementById('mt-sevmez').value = menuTercihler.sevmez;
+if (menuTercihler.not) document.getElementById('mt-not').value = menuTercihler.not;
+if (menuTercihler.butce) document.getElementById('mt-butce').value = menuTercihler.butce;
+</script>
+</body>
+</html>
