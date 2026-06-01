@@ -952,9 +952,9 @@ SADECE JSON formatında yanıt ver, başka hiçbir metin ekleme. Format:
 Türkçe, sağlıklı, kilo dostu, ekonomik yemekler öner. Çeşitlilik olsun.`;
 
   try {
-    const res = await fetch('https://qdbxgieqkjevlvwuosor.supabase.co/functions/v1/menu-olustur', {
+    const res = await fetch('/api/menu', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFkYnhnaWVxa2pldmx2d3Vvc29yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNzQ2MTUsImV4cCI6MjA5NTg1MDYxNX0.rkjqMEG6rUwLcIGlbqwBZNKZOksZ5qwZ7y5TtmgkWsU' },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1000,
