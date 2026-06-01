@@ -500,7 +500,7 @@ body {
       <div class="card-title">haftalık menü</div>
       <div id="menu-haftalik"></div>
       <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <button class="btn btn-sage btn-big" onclick="menuUret()" id="menu-btn">✨ menü oluştur</button>
+        <button class="btn btn-sm btn-sage" onclick="openModal('menu-manuel-modal')">✏️ manuel gir</button>
         <button class="btn btn-sm" onclick="openModal('menu-tercih-modal')">tercihler</button>
       </div>
     </div>
@@ -708,6 +708,28 @@ body {
     <div style="display:flex;gap:8px">
       <button class="btn btn-primary btn-full" onclick="menuTercihKaydet()">kaydet</button>
       <button class="btn btn-full" onclick="closeModal('menu-tercih-modal')">iptal</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Manuel Menü Modal -->
+<div class="modal-overlay" id="menu-manuel-modal">
+  <div class="modal-box">
+    <div class="modal-handle"></div>
+    <div class="modal-title">haftalık menü gir</div>
+    <div style="display:grid;gap:8px">
+      <div class="form-field"><label>Pazartesi</label><input type="text" id="mm-0" placeholder="Fırın tavuk + bulgur..."></div>
+      <div class="form-field"><label>Salı</label><input type="text" id="mm-1" placeholder="Mercimek çorbası..."></div>
+      <div class="form-field"><label>Çarşamba</label><input type="text" id="mm-2" placeholder="Izgara somon..."></div>
+      <div class="form-field"><label>Perşembe</label><input type="text" id="mm-3" placeholder="Sebzeli tavuk sote..."></div>
+      <div class="form-field"><label>Cuma</label><input type="text" id="mm-4" placeholder="Nohutlu ıspanak..."></div>
+      <div class="form-field"><label>Cumartesi</label><input type="text" id="mm-5" placeholder="Köfte + közlenmiş sebze..."></div>
+      <div class="form-field"><label>Pazar</label><input type="text" id="mm-6" placeholder="Etli taze fasulye..."></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-primary btn-full" onclick="menuManuelKaydet()">kaydet</button>
+      <button class="btn btn-full" onclick="closeModal('menu-manuel-modal')">iptal</button>
     </div>
   </div>
 </div>
@@ -1008,6 +1030,26 @@ function menuTercihKaydet() {
   toast('Tercihler kaydedildi');
 }
 
+
+async function menuManuelKaydet() {
+  const gunler = ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'];
+  const menuData = gunler.map((g, i) => ({
+    gun: i,
+    aksam: document.getElementById('mm-' + i).value || '—',
+    kalori: 0,
+    sure: '',
+    malzemeler: []
+  }));
+  const { data: saved } = await sb.from('menu').insert({
+    hafta_baslangic: new Date().toISOString().slice(0, 10),
+    menu_json: menuData
+  }).select().single();
+  cache.menu = saved;
+  closeModal('menu-manuel-modal');
+  renderMutfak();
+  toast('Menü kaydedildi! 🎉');
+}
+
 async function stokEkle() {
   const ad = document.getElementById('s-ad').value.trim();
   if (!ad) return;
@@ -1218,6 +1260,12 @@ async function butceGuncelle() {
 // ─── MODAL ───
 function openModal(id) {
   document.getElementById(id).classList.add('open');
+  if (id === 'menu-manuel-modal' && cache.menu && cache.menu.menu_json) {
+    cache.menu.menu_json.forEach((g, i) => {
+      const el = document.getElementById('mm-' + i);
+      if (el && g.aksam && g.aksam !== '—') el.value = g.aksam;
+    });
+  }
 }
 function closeModal(id) {
   document.getElementById(id).classList.remove('open');
